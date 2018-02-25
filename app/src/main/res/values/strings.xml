@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">SelectRecycler</string>
+    <string name="selection">selection</string>
+</resources>
