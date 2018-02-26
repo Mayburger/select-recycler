@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.preference.PreferenceManager;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,6 +31,7 @@ public class SelectionAdapter extends RecyclerView.Adapter<SelectionAdapter.View
     private String[] data;
     private Context context;
     private RecyclerView recycler;
+    private OnItemClickListener listener;
 
     public SelectionAdapter(String[] data, Context context, RecyclerView recycler) {
         this.data = data;
@@ -45,41 +47,32 @@ public class SelectionAdapter extends RecyclerView.Adapter<SelectionAdapter.View
         return new ViewHolder(itemView);
     }
 
+    public void setOnClickListener(OnItemClickListener listener){
+        this.listener = listener;
+    }
+
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
 
         try {
             SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.selection), MODE_PRIVATE);
-            int selectedPosition = prefs.getInt(context.getString(R.string.selection),0);
-            if (position == selectedPosition){
+            int selectedPosition = prefs.getInt(context.getString(R.string.selection), 0);
+            if (position == selectedPosition) {
                 holder.check.setVisibility(View.VISIBLE);
                 holder.itemParent.setBackgroundColor(context.getResources().getColor(R.color.colorPrimaryDark));
             }
 
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        SharedPreferences.Editor editor = context.getSharedPreferences(context.getString(R.string.selection), MODE_PRIVATE).edit();
-        editor.apply();
-
         holder.text.setText(data[position]);
-        holder.itemParent.setOnClickListener(view -> {
-            int color = Color.TRANSPARENT;
-            Drawable background = holder.itemParent.getBackground();
-            if (background instanceof ColorDrawable)
-                color = ((ColorDrawable) background).getColor();
 
-            if (color == context.getResources().getColor(R.color.colorPrimary)){
-                editor.putInt(context.getString(R.string.selection),position);
-                editor.apply();
-                recycler.setAdapter(this);
-            } else {
-                holder.check.setVisibility(View.INVISIBLE);
-                holder.itemParent.setBackgroundColor(context.getResources().getColor(R.color.colorPrimary));
-                recycler.setAdapter(this);
-            }
-        });
+        holder.click(listener, holder.itemParent, holder.check, position);
+    }
+
+    public interface OnItemClickListener {
+        void onClick(int position, View itemParent, View check);
     }
 
     @Override
@@ -100,6 +93,12 @@ public class SelectionAdapter extends RecyclerView.Adapter<SelectionAdapter.View
         ViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
+        }
+
+        void click(final OnItemClickListener listener, View itemParent, View check, final int position) {
+            itemParent.setOnClickListener(view1 -> {
+                listener.onClick(position, itemParent, check);
+            });
         }
 
     }
